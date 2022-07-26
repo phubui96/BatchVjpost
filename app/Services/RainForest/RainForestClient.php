@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Services\RainForestAPI;
+namespace App\Services\RainForest;
 
 use App\Services\RainForest\RainForestApiResponse;
 use GuzzleHttp\Client;
 
-class RainForestApiClient
+class RainForestClient
 {
     /**
      * @var Client $client
@@ -17,7 +17,7 @@ class RainForestApiClient
     private array $config;
     private const PREFIX_URL = '/request?';
     /**
-     * RainForestApiClient constructor.
+     * RainForestClient constructor.
      * @param Client $client
      * @param array $config
      */
@@ -49,8 +49,8 @@ class RainForestApiClient
 
     public function getCategory(
         string $categoryId,
-        ?int $page,
-        ?int $maxPage
+        int $page = null,
+        int $maxPage = null
     ): RainForestApiResponse {
         $params = array_merge([
             'type' => 'category',

@@ -2,11 +2,11 @@
 
 namespace App\Providers;
 
-use App\Services\RainForest\RainForestClient;
+use App\Services\Magento\MagentoClient;
 use GuzzleHttp\Client;
 use Illuminate\Support\ServiceProvider;
 
-class RainForestClientProvider extends ServiceProvider
+class MagentoClientProdiver extends ServiceProvider
 {
     /**
      * Register any application services.
@@ -16,18 +16,14 @@ class RainForestClientProvider extends ServiceProvider
     public function register()
     {
         //
-        $this->app->singleton(RainForestClient::class, function () {
-            return new RainForestClient(
+        $this->app->singleton(MagentoClient::class, function () {
+            return new MagentoClient(
                 new Client(
                     [
-                        'base_uri' => config('rainforestapi.base_uri'),
+                        'base_uri' => config('magento.base_uri'),
                         'allow_redirects' => false,
                     ]
-                ),
-                [
-                    'api_key' => config('rainforestapi.api_key'),
-                    'amazon_domain' => config('rainforestapi.domain'),
-                ]
+                )
             );
         });
     }
