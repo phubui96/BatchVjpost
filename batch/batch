@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+
+function up {
+  docker-compose up -d $@
+}
+
+function down {
+  docker-compose down --remove-orphans
+}
+
+function restart {
+  docker-compose down && docker-compose up -d
+}
+
+function init {
+  echo "Stating Initialization..."
+
+  echo "Setup Git submodules..."
+  git submodule init
+  git submodule update
+
+  echo "Copy backend .env..."
+  docker-compose run app php -r "copy('.env.example', '.env');"
+
+  echo "Install backend dependencies..."
+  docker-compose run app composer install
+
+  echo "Generate backend application key..."
+  docker-compose run app php artisan key:generate
+
+  echo "Migrate database..."
+  docker-compose run app php artisan migrate
+}
+
+function artisan() {
+  directory=`get_back_directory ${1}`
+  docker-compose exec -w "${directory}" app php artisan "${2}"
+}
+
+function composer() {
+  directory=`get_back_directory ${1}`
+  docker-compose exec -w "${directory}" app composer "${2}"
+}
+
+subcommand="$1"
+shift
+
+case $subcommand in
+up)
+  up $@
+  ;;
+down)
+  down
+  ;;
+init)
+  init
+  ;;
+artisan)
+  artisan "$@"
+  ;;
+composer)
+  composer "$@"
+  ;;
+*)
+  echo "help"
+  ;;
+esac

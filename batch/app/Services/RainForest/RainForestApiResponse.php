@@ -2,6 +2,7 @@
 
 namespace App\Services\RainForest;
 
+use Illuminate\Support\Arr;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 
@@ -30,9 +31,9 @@ class RainForestApiResponse implements ResponseInterface
     /**
      * @return array|null
      */
-    public function getContents(): ?array
+    public function getProduct(): ?array
     {
-        return $this->contents;
+        return Arr::get($this->contents, 'product');
     }
 
     /**

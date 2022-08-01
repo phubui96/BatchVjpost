@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Services\RainForestAPI;
+namespace App\Services\RainForest;
 
 use App\Services\RainForest\RainForestApiResponse;
 use GuzzleHttp\Client;
+use Illuminate\Support\Arr;
 
-class RainForestApiClient
+class RainForestClient
 {
     /**
      * @var Client $client
@@ -15,9 +16,9 @@ class RainForestApiClient
      * @var array $config
      */
     private array $config;
-    private string $createUrl = '/pub/rest/default/V1/products';
+    private const PREFIX_URL = '/request?';
     /**
-     * RainForestApiClient constructor.
+     * RainForestClient constructor.
      * @param Client $client
      * @param array $config
      */
@@ -29,7 +30,7 @@ class RainForestApiClient
         $this->config = $config;
     }
 
-    public function addProduct(string $asin): RainForestApiResponse
+    public function getProduct(string $asin): RainForestApiResponse
     {
         $params = array_merge([
             'type' => 'product',
@@ -47,10 +48,29 @@ class RainForestApiClient
         return new RainForestApiResponse($response);
     }
 
+    public function getProductByUrl(string $url): RainForestApiResponse
+    {
+        $params = array_merge([
+            'type' => 'product',
+            'url' => $url,
+        ], $this->config);
+        Arr::pull($params, 'amazon_domain');
+        $uri = self::PREFIX_URL . http_build_query($params);
+        $response = $this->client->request(
+            'GET',
+            $uri,
+            [
+                'http_errors' => false,
+                'verify' => false,
+            ]
+        );
+        return new RainForestApiResponse($response);
+    }
+
     public function getCategory(
         string $categoryId,
-        ?int $page,
-        ?int $maxPage
+        int $page = null,
+        int $maxPage = null
     ): RainForestApiResponse {
         $params = array_merge([
             'type' => 'category',
