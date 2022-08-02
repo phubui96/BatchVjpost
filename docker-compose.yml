@@ -1,45 +1,32 @@
 version: '3'
 
 services:
-  nginx:
-    image: nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    depends_on:
-      - app
-    volumes:
-      - ./containers/nginx/certs:/etc/nginx/certs
-      - ./containers/nginx/conf.d:/etc/nginx/conf.d
-      - ./containers/nginx/nginx.conf:/etc/nginx/nginx.conf
-
   app:
     ports:
-      - "8080:8080"
+      - "80:80"
     tty: true
     privileged: true
-    build: ./containers/app
-    # depends_on:
-    #   - mysql
-    working_dir: /home/batch
-    command:
-      - /sbin/init
+    build: ./containers
+    container_name: batch
+    depends_on:
+      - mysql
+    command: ["/sbin/init"]
+    restart: always
     volumes:
-      - ./containers/app/nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./containers/app/nginx/conf.d:/etc/nginx/conf.d
-      - ./containers/app/php-fpm/php-fpm.d:/etc/php-fpm.d
-      - ./containers/app/php-fpm/php-fpm.conf:/etc/php-fpm.conf
+      - ./containers/app/nginx.conf:/etc/nginx/nginx.conf
+      - ./containers/app/conf.d:/etc/nginx/conf.d
+      - ./containers/app/php.ini:/etc/php.ini
       - ./batch:/home/batch
 
-  # mysql:
-  #   image: mysql:8.0
-  #   platform: linux/x86_64
-  #   environment:
-  #     MYSQL_ROOT_PASSWORD: password
-  #     MYSQL_DATABASE: example_app
-  #     MYSQL_USER: sail
-  #     MYSQL_PASSWORD: password
-  #   ports:
-  #     - "3306:3306"
-  #   volumes:
-  #     - ./mysql:/var/lib/mysql
+  mysql:
+    image: mysql:8.0
+    platform: linux/x86_64
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: example_app
+      MYSQL_USER: sail
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql:/var/lib/mysql

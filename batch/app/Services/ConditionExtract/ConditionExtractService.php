@@ -4,12 +4,27 @@ namespace App\Services\ConditionExtract;
 
 use App\Services\Magento\MagentoClient;
 use App\Services\Magento\Product;
-use App\Services\RainForest\RainForestApiException;
 use App\Services\RainForest\RainForestClient;
-use Illuminate\Support\Arr;
+use Exception;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class ConditionExtractService
 {
+    private const ATTRIBUTE_KEY = [
+        'branch',
+        'variants',
+        'description',
+        'attributes',
+        'about_this_item',
+        'important_information',
+        'protection_plans',
+        'add_an_accessory',
+        'specifications',
+        'more_buying_choices',
+        'frequently_bought_together',
+        'also_bought',
+    ];
     private RainForestClient $rainForestClient;
     private MagentoClient $magentoClient;
     public function __construct(
@@ -30,30 +45,41 @@ class ConditionExtractService
 
     private function executeProduct(string $url): void
     {
-        $response = $this->rainForestClient->getProductByUrl($url);
-        $productAmazon = $response->getProduct();
-        if ($productAmazon) {
-            $product = new Product();
-            $product->sku = $productAmazon['asin'];
-            $product->name = $productAmazon['title'];
-            $product->price = $productAmazon['buybox_winner']['price']['value'];
-            $product->status = 1;
-            $product->typeId = 'configurable';
-            $product->attributeSetId = 1;
-            $product->customAttributes = [
-                'branch' => $productAmazon['brand'],
-                'variants' => $productAmazon['variants'],
-                'description' => $productAmazon['description'],
-                'attributes' => $productAmazon['attributes'],
-                'about_this_item' => $product['feature_bullets'],
-                'important_information' => $productAmazon['important_information'],
-                'protection_plans' => $productAmazon['protection_plans'],
-                'add_an_accessory' => $productAmazon['add_an_accessory'],
-                'specifications' => $productAmazon['specifications'],
-                'more_buying_choices' => $productAmazon['more_buying_choices'],
-                'frequently_bought_together' => $productAmazon['frequently_bought_together'],
-                'also_bought' => $productAmazon['also_bought'],
-            ];
+
+        try {
+            // $response = $this->rainForestClient->getProductByUrl($url);
+            // $productAmazon = $response->getProduct();
+            $productAmazon = json_decode(Storage::disk('local')->get('test.json'), true);
+
+            if ($productAmazon) {
+                $product = new Product();
+                $product->sku = $productAmazon['asin'];
+                $product->name = $productAmazon['title'];
+                $product->price = $productAmazon['buybox_winner']['price']['value'];
+                $product->status = 1;
+                $product->typeId = 'configurable';
+                $product->attributeSetId = 1;
+                $customAttributes = null;
+                collect(self::ATTRIBUTE_KEY)->each(
+                    function (string $key) use (&$customAttributes, $productAmazon) {
+                        if (isset($productAmazon[$key])) {
+                            $value = is_array($productAmazon[$key]) ? json_encode(
+                                $productAmazon[$key],
+                                JSON_UNESCAPED_UNICODE
+                            ) : (string) $productAmazon[$key];
+                            $customAttributes[] = [
+                                'attribute_code' => $key,
+                                'value' => $value,
+                            ];
+                        }
+                    }
+                );
+                $product->customAttributes = $customAttributes;
+                $params = array_filter($product->toArray());
+                Log::channel('daily')->info(json_encode($params, true));
+            }
+        } catch (Exception $e) {
+            Log::error($e->getMessage());
         }
     }
 

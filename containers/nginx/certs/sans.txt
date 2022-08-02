@@ -1,3 +1,0 @@
-subjectAltName = \
- DNS:batch, \
- IP:127.0.0.1

@@ -22,20 +22,19 @@ namespace App\Services\Magento;
  */
 class Product
 {
-    private string $sku;
-    private string $name;
-    private int $attributeSetId;
-    private float $price;
-    private int $status;
-    private int $visibility;
-    private string $typeId;
-    private float $weight;
-    private array $extensionAttributes;
-    private array $customAttributes;
-    private array $mediaGalleryEntries;
-    private array $options;
-    private array $productLinks;
-    private array $tierPrices;
+    private array $data = [];
+
+    public function __set($name, $value)
+    {
+        $this->data[$name] = $value;
+    }
+    public function __get($name)
+    {
+        if (!array_key_exists($name, $this->data)) {
+            return null;
+        }
+        return $this->data[$name];
+    }
     /**
      * @return array
      */
