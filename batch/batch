@@ -23,13 +23,13 @@ function test {
 
 function init {
   echo "Copy backend .env..."
-  docker-compose run app php -r "copy('.env.example', '.env');"
+  docker-compose exec app php -r "copy('.env.example', '.env');"
 
   echo "Install backend dependencies..."
-  docker-compose run app composer install
+  docker-compose exec app composer install
 
   echo "Generate backend application key..."
-  docker-compose run app php artisan key:generate
+  docker-compose exec app php artisan key:generate
 }
 
 function artisan() {

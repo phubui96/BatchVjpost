@@ -12,7 +12,7 @@ namespace App\Services\Magento;
  * @property int $status
  * @property int $visibility
  * @property string $typeId
- * @property float $weight
+ * @property string $weight
  * @property array $extensionAttributes
  * @property array $customAttributes
  * @property array $mediaGalleryEntries

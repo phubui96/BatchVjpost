@@ -49,16 +49,19 @@ class ConditionExtractService
         try {
             // $response = $this->rainForestClient->getProductByUrl($url);
             // $productAmazon = $response->getProduct();
+            $this->magentoClient->login();
             $productAmazon = json_decode(Storage::disk('local')->get('test.json'), true);
 
             if ($productAmazon) {
                 $product = new Product();
                 $product->sku = $productAmazon['asin'];
                 $product->name = $productAmazon['title'];
-                $product->price = $productAmazon['buybox_winner']['price']['value'];
+                $product->price = $productAmazon['buybox_winner']['price']['value'] ?? null;
                 $product->status = 1;
-                $product->typeId = 'configurable';
-                $product->attributeSetId = 1;
+                $product->typeId = 'simple';
+                $product->attributeSetId = 4;
+                $product->weight = $productAmazon['buybox_winner']['weight'] ?? null;
+                $product->visibility = 1;
                 $customAttributes = null;
                 collect(self::ATTRIBUTE_KEY)->each(
                     function (string $key) use (&$customAttributes, $productAmazon) {
@@ -75,8 +78,15 @@ class ConditionExtractService
                     }
                 );
                 $product->customAttributes = $customAttributes;
-                $params = array_filter($product->toArray());
-                Log::channel('daily')->info(json_encode($params, true));
+                $product->extensionAttributes = [
+                    'category_links' => [
+                        [
+                            'category_id' => 3,
+                            'position' => 0,
+                        ],
+                    ],
+                ];
+                $this->magentoClient->createProduct($product);
             }
         } catch (Exception $e) {
             Log::error($e->getMessage());

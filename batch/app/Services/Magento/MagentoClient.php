@@ -2,7 +2,9 @@
 
 namespace App\Services\Magento;
 
+use App\Services\RainForest\MagentoApiResponse;
 use GuzzleHttp\Client;
+use Illuminate\Support\Facades\Log;
 
 class MagentoClient
 {
@@ -10,24 +12,49 @@ class MagentoClient
      * @var Client $client
      */
     private Client $client;
-    private const CREATE_URL = '/pub/rest/default/V1/products';
+    private string $token;
     /**
      * MagentoClient constructor.
      * @param Client $client
      */
     public function __construct(
-        Client $client
+        Client $client,
+        array $params
     ) {
         $this->client = $client;
+        $this->params = $params;
+        $this->token = '';
     }
 
     public function createProduct(Product $product)
     {
+        $params = array_filter($product->toArray());
+        Log::info(json_encode($params, JSON_UNESCAPED_UNICODE));
         $response = $this->client->request(
             'POST',
-            self::CREATE_URL,
+            $this->params['createPath'],
             [
-                'body' => $product->toArray(),
+                'json' => $params,
+                'http_errors' => false,
+                'verify' => false,
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'Authorization' => 'Bearer ' . $this->token
+                ],
+            ]
+        );
+        Log::channel('daily')->info($response->getBody()->getContents());
+        return new MagentoApiResponse($response);
+    }
+
+    public function login(): void
+    {
+
+        $response = $this->client->request(
+            'POST',
+            $this->params['loginPath'],
+            [
+                'json' =>  $this->params['bodyLogin'],
                 'http_errors' => false,
                 'verify' => false,
                 'headers' => [
@@ -35,6 +62,13 @@ class MagentoClient
                 ],
             ]
         );
-        return new MagentoApiResponse($response);
+        $this->token = str_replace(
+            '"',
+            '',
+            $response->getBody()->getContents()
+        );
+        if ($response->getStatusCode() !== 200) {
+            throw new MagentoApiException($this->token);
+        }
     }
 }
