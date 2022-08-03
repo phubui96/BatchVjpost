@@ -11,11 +11,16 @@ services:
     # depends_on:
     #   - mysql
     command: ["/sbin/init"]
-    restart: always
     volumes:
       - ./containers/app/nginx.conf:/etc/nginx/nginx.conf
       - ./containers/app/conf.d:/etc/nginx/conf.d
       - ./containers/app/php.ini:/etc/php.ini
+      - ./batch:/home/batch
+  
+  cron:
+    build: ./containers/cron
+    container_name: cron
+    volumes:
       - ./batch:/home/batch
 
   # mysql:
