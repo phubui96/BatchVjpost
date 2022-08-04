@@ -28,7 +28,8 @@ class MagentoClient
 
     public function createProduct(Product $product)
     {
-        $params = array_filter($product->toArray());
+        $params = $product->toArray();
+        $params['product'] = array_filter($params['product']);
         Log::info(json_encode($params, JSON_UNESCAPED_UNICODE));
         $response = $this->client->request(
             'POST',

@@ -15,9 +15,6 @@ use Illuminate\Support\Facades\Route;
 */
 
 //Route::get('/test', [App\Http\Controllers\TestController::class, 'test'])->name('test');
-Route::get('/test1', function () {
-    return 'test';
-})->name('test1');
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
