@@ -47,10 +47,10 @@ class ConditionExtractService
     {
 
         try {
-            // $response = $this->rainForestClient->getProductByUrl($url);
-            // $productAmazon = $response->getProduct();
+            $response = $this->rainForestClient->getProductByUrl($url);
+            $productAmazon = $response->getProduct();
             $this->magentoClient->login();
-            $productAmazon = json_decode(Storage::disk('local')->get('test.json'), true);
+            #$productAmazon = json_decode(Storage::disk('local')->get('test.json'), true);
 
             if ($productAmazon) {
                 $product = new Product();
