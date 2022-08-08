@@ -51,7 +51,6 @@ class ConditionExtractService
             $productAmazon = $response->getProduct();
             $this->magentoClient->login();
             #$productAmazon = json_decode(Storage::disk('local')->get('test.json'), true);
-
             if ($productAmazon) {
                 $product = new Product();
                 $product->sku = $productAmazon['asin'];
@@ -61,7 +60,7 @@ class ConditionExtractService
                 $product->typeId = 'simple';
                 $product->attributeSetId = 4;
                 $product->weight = $productAmazon['buybox_winner']['weight'] ?? null;
-                $product->visibility = 1;
+                $product->visibility = 4;
                 $customAttributes = null;
                 collect(self::ATTRIBUTE_KEY)->each(
                     function (string $key) use (&$customAttributes, $productAmazon) {

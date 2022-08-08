@@ -25,7 +25,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         // $schedule->command('inspire')->hourly();
-        $schedule->command('command:add-product')->everyFiveMinutes()->name('task-add')->withoutOverlapping();
+        $schedule->command('command:add-product')->everyMinute()->name('task-add')->withoutOverlapping();
     }
 
     /**
