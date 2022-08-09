@@ -80,7 +80,7 @@ class ConditionExtractService
                 $product->extensionAttributes = [
                     'category_links' => [
                         [
-                            'category_id' => 3,
+                            'category_id' => 4,
                             'position' => 0,
                         ],
                     ],
