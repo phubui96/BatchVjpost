@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Services\RainForest;
+namespace App\Services\Magento;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 
 /**
  * Class RainForestApiResponse
- * @package App\Services\RainForest
+ * @package App\Services\Magento
  */
 class MagentoApiResponse implements ResponseInterface
 {

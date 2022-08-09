@@ -2,7 +2,7 @@
 
 namespace App\Services\Magento;
 
-use App\Services\RainForest\MagentoApiResponse;
+use App\Utility\DataConverter;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Log;
 
@@ -44,8 +44,68 @@ class MagentoClient
                 ],
             ]
         );
-        Log::channel('daily')->info($response->getBody()->getContents());
+        // Log::channel('daily')->info($response->getBody()->getContents());
         return new MagentoApiResponse($response);
+    }
+
+    public function addImage(string $sku, string $imageUrl)
+    {
+        $contents = $this->getImageByPath($imageUrl);
+        $dataBase64 = DataConverter::convertDataBase64($contents);
+        $mimeType = DataConverter::getMimeType($contents);
+        $fileName = basename($imageUrl);
+        $image = new Image();
+        $image->mediaType = 'image';
+        $image->label = 'label image';
+        $image->position = 1;
+        $image->disabled = false;
+        $image->types = [
+            'image',
+            'small_image',
+            'thumbnail',
+        ];
+        $image->content = [
+            'base64_encoded_data' => $dataBase64,
+            'type' => $mimeType,
+            'name' => $fileName,
+        ];
+        $image->file = $fileName;
+        $uri = str_replace('{sku}',$sku,$this->params['imagePath']);
+        var_dump($uri);
+        $this->client->request(
+            'POST',
+            $uri,
+            [
+                'json' => $image->toArray(),
+                'http_errors' => false,
+                'verify' => false,
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'Authorization' => 'Bearer ' . $this->token
+                ],
+            ]
+        );
+    }
+
+    private function getImageByPath(string $path): string
+    {
+        $httpClient = new Client();
+        $response = $httpClient->request(
+            'GET',
+            $path,
+            [
+                'stream' => true,
+                'verify' => false,
+                'http_errors' => false, // エラー時に例外に変換しない
+            ]
+        );
+        $contents = $response->getBody()->getContents();
+
+        if ($response->getStatusCode() !== 200) {
+            throw new MagentoApiException($contents);
+        }
+
+        return $contents;
     }
 
     public function login(): void

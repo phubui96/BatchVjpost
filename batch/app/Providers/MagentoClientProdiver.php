@@ -20,6 +20,7 @@ class MagentoClientProdiver extends ServiceProvider
             $params = [
                 'createPath' => config('magento.create_path'),
                 'loginPath' => config('magento.login_path'),
+                'imagePath' => config('magento.image_path'),
                 'bodyLogin' => [
                     'username' => config('magento.username'),
                     'password' => config('magento.password'),

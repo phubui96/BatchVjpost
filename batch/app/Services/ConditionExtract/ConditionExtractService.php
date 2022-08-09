@@ -50,7 +50,7 @@ class ConditionExtractService
             $response = $this->rainForestClient->getProductByUrl($url);
             $productAmazon = $response->getProduct();
             $this->magentoClient->login();
-            #$productAmazon = json_decode(Storage::disk('local')->get('test.json'), true);
+            // $productAmazon = json_decode(Storage::disk('local')->get('test.json'), true);
             if ($productAmazon) {
                 $product = new Product();
                 $product->sku = $productAmazon['asin'];
@@ -84,8 +84,16 @@ class ConditionExtractService
                             'position' => 0,
                         ],
                     ],
+                    'stock_item' =>  [
+                        'qty' => '100',
+                        'is_in_stock' => true
+                    ]
                 ];
                 $this->magentoClient->createProduct($product);
+                $imageLink = $productAmazon['main_image']['link'] ?? null;
+                if ($imageLink) {
+                    $this->magentoClient->addImage($product->sku, $imageLink);
+                }
             }
         } catch (Exception $e) {
             Log::error($e->getMessage());
