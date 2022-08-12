@@ -7,4 +7,8 @@ return [
     'image_path' => env('MAGENTO_IMAGE_PATH'),
     'username' => env('MAGENTO_USER_NAME'),
     'password' => env('MAGENTO_PASSWORD'),
+    'store_code' => [
+        'default',
+        'vi',
+    ]
 ];

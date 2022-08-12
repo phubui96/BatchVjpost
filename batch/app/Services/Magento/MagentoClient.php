@@ -13,6 +13,7 @@ class MagentoClient
      */
     private Client $client;
     private string $token;
+    private array $storeCodes;
     /**
      * MagentoClient constructor.
      * @param Client $client
@@ -24,28 +25,31 @@ class MagentoClient
         $this->client = $client;
         $this->params = $params;
         $this->token = '';
+        $this->storeCodes = (array) config('magento.store_code');
     }
 
-    public function createProduct(Product $product)
+    public function createProduct(Product $product): void
     {
         $params = $product->toArray();
         $params['product'] = array_filter($params['product']);
-        Log::info(json_encode($params, JSON_UNESCAPED_UNICODE));
-        $response = $this->client->request(
-            'POST',
-            $this->params['createPath'],
-            [
-                'json' => $params,
-                'http_errors' => false,
-                'verify' => false,
-                'headers' => [
-                    'Content-Type' => 'application/json',
-                    'Authorization' => 'Bearer ' . $this->token
-                ],
-            ]
-        );
+        collect($this->storeCodes)->map(function (string $storeCode) use ($params) {
+            $path = str_replace('{store_code}', $storeCode, $this->params['createPath']);
+            $this->client->request(
+                'POST',
+                $path,
+                [
+                    'json' => $params,
+                    'http_errors' => false,
+                    'verify' => false,
+                    'headers' => [
+                        'Content-Type' => 'application/json',
+                        'Authorization' => 'Bearer ' . $this->token
+                    ],
+                ]
+            );
+        });
         // Log::channel('daily')->info($response->getBody()->getContents());
-        return new MagentoApiResponse($response);
+        // return new MagentoApiResponse($response);
     }
 
     public function addImage(string $sku, string $imageUrl)
@@ -70,21 +74,24 @@ class MagentoClient
             'name' => $fileName,
         ];
         $image->file = $fileName;
-        $uri = str_replace('{sku}',$sku,$this->params['imagePath']);
-        var_dump($uri);
-        $this->client->request(
-            'POST',
-            $uri,
-            [
-                'json' => $image->toArray(),
-                'http_errors' => false,
-                'verify' => false,
-                'headers' => [
-                    'Content-Type' => 'application/json',
-                    'Authorization' => 'Bearer ' . $this->token
-                ],
-            ]
-        );
+        $uri = str_replace('{sku}', $sku, $this->params['imagePath']);
+
+        collect($this->storeCodes)->map(function (string $storeCode) use ($uri,$image) {
+            $path = str_replace('{store_code}', $storeCode, $uri);
+            $this->client->request(
+                'POST',
+                $path,
+                [
+                    'json' => $image->toArray(),
+                    'http_errors' => false,
+                    'verify' => false,
+                    'headers' => [
+                        'Content-Type' => 'application/json',
+                        'Authorization' => 'Bearer ' . $this->token
+                    ],
+                ]
+            );
+        });
     }
 
     private function getImageByPath(string $path): string
