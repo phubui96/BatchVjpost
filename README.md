@@ -2,8 +2,7 @@
 
 ### INSTALL
 
-cd batch
 ```
-./batch up
-./batch init
+./bat up
+./bat init
 ```
