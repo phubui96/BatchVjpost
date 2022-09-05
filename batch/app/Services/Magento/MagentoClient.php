@@ -28,14 +28,27 @@ class MagentoClient
         $this->storeCodes = (array) config('magento.store_code');
     }
 
-    public function createProduct(Product $product): void
+    public function saveProduct(Product $product): void
     {
         $params = $product->toArray();
         $params['product'] = array_filter($params['product']);
         collect($this->storeCodes)->map(function (string $storeCode) use ($params) {
-            $path = str_replace('{store_code}', $storeCode, $this->params['createPath']);
+            $pathGet = str_replace('{store_code}', $storeCode, $this->params['getPath']);
+            $pathGet = str_replace('{sku}', $params['product']['sku'], $pathGet);
+            $path = '';
+            $methord = '';
+            $isExist = $this->isExists($pathGet);
+            if ($isExist) {
+                $path = $pathGet;
+                $methord = 'PUT';
+            } else {
+                $path = str_replace('{store_code}', $storeCode, $this->params['createPath']);
+                $methord = 'POST';
+            }
+            Log::channel('daily')->info($path);
+            Log::channel('daily')->info($methord);
             $this->client->request(
-                'POST',
+                $methord,
                 $path,
                 [
                     'json' => $params,
@@ -52,7 +65,7 @@ class MagentoClient
         // return new MagentoApiResponse($response);
     }
 
-    public function addImage(string $sku, string $imageUrl)
+    public function createImage(string $imageUrl): array
     {
         $contents = $this->getImageByPath($imageUrl);
         $dataBase64 = DataConverter::convertDataBase64($contents);
@@ -74,24 +87,31 @@ class MagentoClient
             'name' => $fileName,
         ];
         $image->file = $fileName;
-        $uri = str_replace('{sku}', $sku, $this->params['imagePath']);
+        return $image->toArray();
+    }
 
-        collect($this->storeCodes)->map(function (string $storeCode) use ($uri,$image) {
-            $path = str_replace('{store_code}', $storeCode, $uri);
-            $this->client->request(
-                'POST',
-                $path,
-                [
-                    'json' => $image->toArray(),
-                    'http_errors' => false,
-                    'verify' => false,
-                    'headers' => [
-                        'Content-Type' => 'application/json',
-                        'Authorization' => 'Bearer ' . $this->token
-                    ],
-                ]
-            );
-        });
+    public function isExists(string $path): bool
+    {
+        $response = $this->client->request(
+            'GET',
+            $path,
+            [
+                'stream' => true,
+                'verify' => false,
+                'http_errors' => false,
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $this->token
+                ],
+            ]
+        );
+        Log::channel('daily')->info($path);
+        $contents = $response->getBody()->getContents();
+
+        if ($response->getStatusCode() !== 200 && $response->getStatusCode() !== 404) {
+            throw new MagentoApiException($contents);
+        }
+
+        return $response->getStatusCode() === 200;
     }
 
     private function getImageByPath(string $path): string

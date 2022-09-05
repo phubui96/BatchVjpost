@@ -7,7 +7,6 @@ use App\Services\Magento\Product;
 use App\Services\RainForest\RainForestClient;
 use Exception;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 
 class ConditionExtractService
 {
@@ -50,7 +49,7 @@ class ConditionExtractService
             $response = $this->rainForestClient->getProductByUrl($url);
             $productAmazon = $response->getProduct();
             $this->magentoClient->login();
-            // $productAmazon = json_decode(Storage::disk('local')->get('test.json'), true);
+            //$productAmazon = json_decode(Storage::disk('local')->get('test.json'), true);
             if ($productAmazon) {
                 $product = new Product();
                 $product->sku = $productAmazon['asin'];
@@ -89,11 +88,11 @@ class ConditionExtractService
                         'is_in_stock' => true
                     ]
                 ];
-                $this->magentoClient->createProduct($product);
                 $imageLink = $productAmazon['main_image']['link'] ?? null;
                 if ($imageLink) {
-                    $this->magentoClient->addImage($product->sku, $imageLink);
+                    $product->mediaGalleryEntries = $this->magentoClient->createImage($imageLink);
                 }
+                $this->magentoClient->saveProduct($product);
             }
         } catch (Exception $e) {
             Log::error($e->getMessage());

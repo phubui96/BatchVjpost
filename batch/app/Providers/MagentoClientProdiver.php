@@ -19,6 +19,7 @@ class MagentoClientProdiver extends ServiceProvider
         $this->app->singleton(MagentoClient::class, function () {
             $params = [
                 'createPath' => config('magento.create_path'),
+                'getPath' => config('magento.get_path'),
                 'loginPath' => config('magento.login_path'),
                 'imagePath' => config('magento.image_path'),
                 'bodyLogin' => [
