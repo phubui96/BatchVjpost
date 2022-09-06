@@ -34,7 +34,7 @@ class Image
     public function toArray(): array
     {
         return [
-            'entry' => [
+            [
                 'media_type' => $this->mediaType,
                 'label' => $this->label,
                 'position' => $this->position,
